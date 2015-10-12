@@ -1,0 +1,5 @@
+name "opengl_like"
+description "A minimal D application."
+copyright "Copyright © 2015, morsk"
+authors "morsk"
+dependency "imageformats" version="~master"
