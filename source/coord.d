@@ -1,5 +1,7 @@
 module coord;
 
+import std.math;
+
 struct Coord(size_t N, T)
 {
 public:
@@ -9,11 +11,18 @@ public:
 	{
 		data = val;
 	}
-	auto opBinary(string op)( in Coord!(N,T) b ) const
+    auto opBinary(string op)( in Coord!(N,T) b ) const
     {
         Coord!(N,T) ret;
         foreach( i; 0 .. N )
             mixin( "ret.data[i] = data[i] " ~ op ~ " b.data[i];" );
+        return ret;
+    }
+    auto opBinary(string op)( in T rhs ) const
+    {
+        Coord!(N,T) ret;
+        foreach( i; 0 .. N )
+            mixin( "ret.data[i] = data[i] " ~ op ~ " rhs;" );
         return ret;
     }
     ref T x()
@@ -40,7 +49,16 @@ public:
     	}
     	else static assert(0, "wrong count of elements");
     }
-    L opCast(L)()
+    L opCast(L)() if(is(L == Coord!(N,int)))
+    {
+        L result;
+        for(int i = 0; i < N; i++)
+        {
+            result[i] = cast(int)(std.math.round(data[i]));
+        }
+        return result;
+    }
+    L opCast(L)() if(!is(L == Coord!(N,int)))
     {
         L result;
         for(int i = 0; i < N; i++)

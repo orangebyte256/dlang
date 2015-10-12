@@ -16,12 +16,16 @@ public:
 		setPixel = setPixel_;
 		width = width_;
 		height = height_;
-//		depth_buffer = new double[width_][height_]
+		depth_buffer = new double[width_ * height_];
+		foreach(ref val; depth_buffer)
+		{
+			val = -10000000.0;
+		}
 	}
 	void drawLine(Coord3d first_, Coord3d second_, in Color color)
 	{
-		auto first = transfer(first_);
-		auto second = transfer(second_);
+		auto first = transfer!(int)(first_);
+		auto second = transfer!(int)(second_);
 
 		bool swap = false;
 		if(std.math.abs(first.x - second.x) < std.math.abs(first.y - second.y))
@@ -48,37 +52,44 @@ public:
 	}
 	void drawTriangle(in Color color, Coord3d[] vertex_...)
 	{
-		std.stdio.writeln(vertex_);
-		Coord3i[] vertex;
+		Coord3d[] vertex;
 		foreach(element; vertex_)
 		{
-			vertex ~= transfer(element);
+			Coord3d tmp = transfer!(double)(element);
+			tmp = cast(Coord3d)(cast(Coord3i)(tmp));
+			tmp.z = transfer!(double)(element).z;
+			vertex ~= tmp;
 		}
-		auto func = ((Coord3i a, Coord3i b) => (a.y < b.y));
+		auto func = ((Coord3d a, Coord3d b) => (a.y < b.y));
 		std.algorithm.sorting.sort!(func, std.algorithm.SwapStrategy.stable)(vertex);
 		std.stdio.writeln(vertex);
-		int first = 0, second = 0;
-		double first_step = cast(double)(vertex[2].x - vertex[0].x)/(vertex[2].y - vertex[0].y);
-		double second_first_step = cast(double)(vertex[1].x - vertex[0].x)/(vertex[1].y - vertex[0].y);
-		double second_second_step = cast(double)(vertex[2].x - vertex[1].x)/cast(double)(vertex[2].y - vertex[1].y);
-		for(int y = vertex[0].y; y < vertex[2].y; y++)
+		Coord3d first, second;
+		double first_step = 1.0/cast(double)(vertex[2].y - vertex[0].y);
+		double second_first_step = 1.0/cast(double)(vertex[1].y - vertex[0].y);
+		double second_second_step = 1.0/cast(double)(vertex[2].y - vertex[1].y);
+		for(int y = cast(int)(vertex[0].y); y <= cast(int)(vertex[2].y); y++)
 		{
-			first = cast(int)(vertex[0].x + first_step * cast(double)(y - vertex[0].y));
+			first = vertex[0] + (vertex[2] - vertex[0]) * (first_step * cast(double)(y - vertex[0].y));
 			if(y < vertex[1].y)
 			{
-				second = cast(int)(vertex[0].x + second_first_step * cast(double)(y - vertex[0].y));
+				second = vertex[0] + (vertex[1] - vertex[0]) * (second_first_step * cast(double)(y - vertex[0].y));
 			}
 			else
 			{
-				second = cast(int)(vertex[1].x + second_second_step * cast(double)(y - vertex[1].y));
+				second = vertex[1] + (vertex[2] - vertex[1]) * (second_second_step * cast(double)(y - vertex[1].y));
 			}
-			if(second < first)
+			if(second.x < first.x)
 			{
 				std.algorithm.swap(second, first);
 			}
-			for(int x = first; x <= second; x++)
+			for(int x = cast(int)(first.x); x <= cast(int)(second.x); x++)
 			{
-				setPixel(Coord3i(x, y, 0), color);
+				double z = first.z * (1 - (cast(double)(x) / (second.x - first.x))) + (cast(double)(x) / (second.x - first.x)) * second.z;
+				if(z > depth_buffer[y * width + x])
+				{ 
+					depth_buffer[y * width + x] = z;
+					setPixel(Coord3i(x, y, 0), color);
+				}
 			}
 		}
 	}
@@ -86,16 +97,12 @@ private:
 	void delegate(const Coord3i, const Color) setPixel;
 	int width;
 	int height;
-//	double[][] depth_buffer;
-	Coord3i transfer(Coord3d val)
+	double[] depth_buffer;
+	Coord!(3, T) transfer(T)(Coord3d val)
 	{
-		std.stdio.writeln(val);
 		val = val + Coord!(3, double)(1.0f,1.0f,0.0f);
-		std.stdio.writeln(val);
 		val = val * Coord!(3, double)(cast(double)(width / 2),cast(double)(height / 2),0);
-		std.stdio.writeln(val);
-		std.stdio.writeln(cast(Coord3i)(val));
-		return cast(Coord3i)(val);
+		return cast(Coord!(3, T))(val);
 	}
 
 }

@@ -72,7 +72,7 @@ class Model
 			std.stdio.writeln(res);
 			ubyte color = cast(ubyte)(res * 255.0);
 			if(res >= 0)
-				render.drawTriangle(Color(color, color, color), vertex[v[0]], vertex[v[1]], vertex[v[2]]);
+				render.drawTriangle(Color(color, 0, 0), vertex[v[0]], vertex[v[1]], vertex[v[2]]);
 		}
 	}
 }
