@@ -11,6 +11,17 @@ public:
 	{
 		data = val;
 	}
+    this(size_t V)(in T[V] val) if(V > N)
+    {
+        int count = 0;
+        static if(V > N)
+        {   
+            for(int i = 0; i < N; i++)
+            {
+                data[i] = val[i];
+            }
+        }
+    }
     auto opBinary(string op)( in Coord!(N,T) b ) const
     {
         Coord!(N,T) ret;
@@ -39,7 +50,10 @@ public:
     	{
     		return data[1];
     	}
-    	else static assert(0, "wrong count of elements");
+        else 
+        {
+            return *(new T);
+        }
     }
     ref T z()
     {
@@ -47,7 +61,10 @@ public:
     	{
     		return data[2];
     	}
-    	else static assert(0, "wrong count of elements");
+    	else 
+        {
+            return *(new T);
+        }
     }
     L opCast(L)() if(is(L == Coord!(N,int)))
     {
